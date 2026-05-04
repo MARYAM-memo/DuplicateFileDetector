@@ -1,0 +1,57 @@
+﻿@using DFD.Application.ViewModels.Folders
+@model IEnumerable<FoldersListVM>
+
+@{
+    ViewData["Title"] = "المجلدات";
+}
+
+@section Breadcrumb {
+    <span><i class="fas fa-folder-tree"></i> المجلدات</span>
+}
+
+<div class="stats-grid">
+    <div class="stat-card primary">
+        <div class="stat-icon"><i class="fas fa-folder"></i></div>
+        <div class="stat-info">
+            <h3>@Model.Count()</h3>
+            <p>إجمالي المجلدات</p>
+        </div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-icon"><i class="fas fa-file"></i></div>
+        <div class="stat-info">
+            <h3>@Model.Sum(f => f.FilesCount)</h3>
+            <p>إجمالي الملفات</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fas fa-folders"></i> المجلدات</h2>
+        <a asp-action="Create" class="btn btn-primary"><i class="fas fa-plus"></i> مجلد جديد</a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <i class="fas fa-folder-open"></i>
+            <h3>لا يوجد مجلدات</h3>
+            <p>ابدأ بإنشاء مجلد جديد لتنظيم ملفاتك</p>
+        </div>
+    }
+    else
+    {
+        <div class="folders-grid">
+            @foreach (var folder in Model)
+            {
+                <a asp-action="Details" asp-route-id="@folder.Id" class="folder-card">
+                    <i class="fas fa-folder"></i>
+                    <h4>@folder.Name</h4>
+                    <p>@folder.FilesCount ملف </p>
+                    <p>@folder.CreatedAt.ToString("yyyy/MM/dd")</p>
+                </a>
+            }
+        </div>
+    }
+</div>

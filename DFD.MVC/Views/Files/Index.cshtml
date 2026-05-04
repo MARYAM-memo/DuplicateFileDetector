@@ -1,0 +1,115 @@
+﻿@model IEnumerable<FilesListVM>
+
+@{
+    ViewData["Title"] = "الملفات";
+}
+
+@section Breadcrumb {
+    <span><i class="fas fa-file-shield"></i> الملفات</span>
+}
+
+<div class="stats-grid">
+    <div class="stat-card primary">
+        <div class="stat-icon"><i class="fas fa-file-text"></i></div>
+        <div class="stat-info">
+            <h3>@Model.Count()</h3>
+            <p>إجمالي الملفات</p>
+        </div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-icon"><i class="fas fa-hard-drive"></i></div>
+        <div class="stat-info">
+            <h3>@Functions.FormatSize(Model.Sum(f => f.FileSize ?? 0))</h3>
+            <p>إجمالي الحجم</p>
+        </div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-icon"><i class="fas fa-images"></i></div>
+        <div class="stat-info">
+            <h3>@Model.Count(f => f.ContentType.StartsWith("image/"))</h3>
+            <p>صور</p>
+        </div>
+    </div>
+    <div class="stat-card danger">
+        <div class="stat-icon"><i class="fas fa-file-pdf"></i></div>
+        <div class="stat-info">
+            <h3>@Model.Count(f => f.ContentType == "application/pdf")</h3>
+            <p>PDFs</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fas fa-list"></i> قائمة الملفات</h2>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <i class="fas fa-file-circle-xmark"></i>
+            <h3>لا يوجد ملفات</h3>
+            <p>إضغط على زرار رفع ملف جديد</p>
+        </div>
+    }
+    else
+    {
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>الإجراءات</th>
+                    <th>آخر وصول</th>
+                    <th>تاريخ الرفع</th>
+                    <th>SHA256</th>
+                    <th>الحجم</th>
+                    <th>المجلد</th>
+                    <th>الملف</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var file in Model)
+                {
+                    <tr>
+                        <td>
+                            <div style="display: flex; gap: 6px;">
+                                <form asp-action="Delete" asp-route-id="@file.Id" method="post"
+                                      onsubmit="return confirm('تأكيد الحذف؟');" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger p-2" title="حذف"><i
+                                        class="fas fa-trash"></i></button>
+                                    </form>
+                                    <a href="@file.FilePath" target="_blank" class="btn btn-sm btn-primary" title="عرض"><i
+                                        class="fas fa-eye"></i></a>
+                                    
+                                    </div>
+                                </td>
+                                <td>@(file.LastAccessedAt?.ToString("yyyy-MM-dd") ?? "-")</td>
+                                <td>@file.UploadedAt.ToString("yyyy-MM-dd")</td>
+                                <td>
+                                    <code
+                                        style="font-size: 0.75rem; background: var(--gray-100); padding: 4px 8px; border-radius: 4px; direction: ltr; display: inline-block;">
+                                        @file.FileHash[..20]...
+                                    </code>
+                                </td>
+                                <td>@Functions.FormatSize(file.FileSize??0)</td>
+                                <td>
+                                    <span class="badge badge-success">
+                                        @(file.FolderName ?? "بدون مجلد") <i class="fas fa-folder"></i>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="file-row">
+                                        <div class="file-meta">
+                                            <span class="file-name">@file.OriginalFileName</span>
+                                            <span style="font-size: 0.75rem; color: var(--gray-400);">@file.StoredFileName</span>
+                                        </div>
+                                        <div class="file-icon @Functions.GetFileIconClass(file.ContentType)">
+                                            <i class="fas @Functions.GetFileIcon(file.ContentType)"></i>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>

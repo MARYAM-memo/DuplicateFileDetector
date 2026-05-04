@@ -1,0 +1,360 @@
+﻿@model FileUploadVM
+
+@{
+    ViewData["Title"] = "رفع ملف جديد";
+}
+
+@section Breadcrumb {
+    <a asp-action="Index"><i class="fas fa-file-shield"></i> الملفات</a>
+    <span class="mx-2">/</span>
+    <span>رفع ملف جديد</span>
+}
+
+<div style="max-width: 700px; margin: 0 auto;">
+    <!-- Progress Steps -->
+    <div style="display: flex; justify-content: center; margin-bottom: 32px; gap: 8px;">
+        <div class="step active" id="step1">
+            <div class="step-number">1</div>
+            <span>اختيار الملف</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step2">
+            <div class="step-number">2</div>
+            <span>فحص التكرار</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step3">
+            <div class="step-number">3</div>
+            <span>الرفع</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title"><i class="fas fa-cloud-arrow-up"></i> رفع ملف جديد</h2>
+        </div>
+
+        <form asp-action="Upload" method="post" enctype="multipart/form-data" id="uploadForm">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <!-- Folder Selection -->
+            <div class="form-group">
+                <label asp-for="FolderId"><i class="fas fa-folder"></i> المجلد</label>
+                <select asp-for="FolderId" class="form-select" id="folderSelect">
+                    <option value="">-- اختر مجلد --</option>
+                    @foreach (var folder in Model.AvailableFolders)
+                    {
+                        <option value="@folder.Id">@folder.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="FolderId" class="text-danger"
+                      style="color: var(--danger); font-size: 0.85rem;"></span>
+            </div>
+
+            <!-- Upload Zone -->
+            <div class="upload-zone" id="uploadZone">
+                <input asp-for="File" type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" hidden />
+                <div class="upload-zone-content" id="zoneContent">
+                    <i class="fas fa-cloud-arrow-up"></i>
+                    <p>اسحب الملف هنا أو <span class="text-link">اضغط للاختيار</span></p>
+                    <small>PDF, JPG, PNG, DOC - الحد الأقصى (50 MB)</small>
+                </div>
+            </div>
+            <span asp-validation-for="File" class="text-danger"
+                  style="color: var(--danger); font-size: 0.85rem; display: block; margin-top: 8px;"></span>
+
+            <!-- File Preview -->
+            <div class="file-preview" id="filePreview" style="display: none;">
+                <div class="file-info">
+                    <i class="fas fa-file" id="previewIcon"></i>
+                    <div>
+                        <p class="file-name" id="previewName">-</p>
+                        <p class="file-size" id="previewSize">-</p>
+                    </div>
+                    <button type="button" class="btn btn-danger btn-sm" id="removeFileBtn" style="margin-right: auto;">
+                        <i class="fas fa-xmark"></i>
+                    </button>
+                </div>
+                
+                <!-- Hash Section -->
+                <div class="hash-section">
+                    <div class="hash-row">
+                        <span class="hash-label"><i class="fas fa-fingerprint"></i> SHA-256:</span>
+                        <code class="hash-value" id="previewHash">جاري الحساب...</code>
+                    </div>
+                    <div class="hash-progress" id="hashProgress">
+                        <div class="hash-progress-bar" id="hashProgressBar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Duplicate Alert -->
+            <div class="alert alert-danger" id="duplicateAlert" style="display: none;">
+                <i class="fas fa-triangle-exclamation"></i>
+                <div>
+                    <strong>ملف مكرر!</strong>
+                    <p id="duplicateMsg">هذا الملف موجود بالفعل في النظام.</p>
+                    <a asp-action="Index" class="btn btn-sm btn-primary" style="margin-top: 8px;">
+                        <i class="fas fa-list"></i> عرض الملفات
+                    </a>
+                </div>
+            </div>
+
+            <!-- Upload Progress -->
+            <div class="upload-progress-container" id="uploadProgress" style="display: none;">
+                <div class="upload-progress-header">
+                    <span><i class="fas fa-spinner fa-spin"></i> جاري الرفع...</span>
+                    <span id="uploadPercent">0%</span>
+                </div>
+                <div class="upload-progress-bar-bg">
+                    <div class="upload-progress-bar-fill" id="uploadProgressBar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="modal-actions"
+                 style="border-top: 1px solid var(--gray-200); padding-top: 20px; margin-top: 24px;">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right"></i> إلغاء
+                </a>
+                <button type="submit" class="btn btn-primary" id="uploadBtn" disabled>
+                    <i class="fas fa-upload"></i> رفع الملف
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Upload Zone Logic
+        const zone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const zoneContent = document.getElementById('zoneContent');
+        const filePreview = document.getElementById('filePreview');
+        const previewName = document.getElementById('previewName');
+        const previewSize = document.getElementById('previewSize');
+        const previewIcon = document.getElementById('previewIcon');
+        const previewHash = document.getElementById('previewHash');
+        const hashProgressBar = document.getElementById('hashProgressBar');
+        const duplicateAlert = document.getElementById('duplicateAlert');
+        const duplicateMsg = document.getElementById('duplicateMsg');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const removeFileBtn = document.getElementById('removeFileBtn');
+        const uploadForm = document.getElementById('uploadForm');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const uploadProgressBar = document.getElementById('uploadProgressBar');
+        const uploadPercent = document.getElementById('uploadPercent');
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const step3 = document.getElementById('step3');
+
+        let selectedFile = null;
+        let isDuplicate = false;
+
+        // Click to select
+        zone.addEventListener('click', (e) => {
+            if (e.target === fileInput) return;
+            e.stopPropagation();
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Drag & Drop
+        zone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            zone.classList.add('dragover');
+        });
+
+        zone.addEventListener('dragleave', () => {
+            zone.classList.remove('dragover');
+        });
+
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            zone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        removeFileBtn.addEventListener('click', resetUpload);
+
+        function handleFile(file) {
+            // Validate size (50MB)
+            const maxSize = 50 * 1024 * 1024;
+            if (file.size > maxSize) {
+                showToast('حجم الملف يتجاوز 50MB', 'error');
+                return;
+            }
+
+            selectedFile = file;
+            step1.classList.add('active', 'completed');
+
+            // Show preview
+            zone.style.display = 'none';
+            filePreview.style.display = 'block';
+            previewName.textContent = file.name;
+            previewSize.textContent = formatFileSize(file.size);
+            previewIcon.className = 'fas ' + getFileIcon(file.type);
+
+            // Calculate hash
+            calculateHash(file);
+        }
+
+        async function calculateHash(file) {
+            step2.classList.add('active');
+            hashProgressBar.style.width = '0%';
+
+            try {
+                const hash = await sha256(file, (progress) => {
+                    hashProgressBar.style.width = progress + '%';
+                });
+
+                previewHash.textContent = hash;
+                step2.classList.add('completed');
+
+                // Check duplicate
+                await checkDuplicate(hash);
+
+            } catch (err) {
+                previewHash.textContent = 'خطأ في الحساب';
+                console.error(err);
+            }
+        }
+
+        async function sha256(file, onProgress) {
+            const chunkSize = 1024 * 1024; // 1MB chunks
+            const chunks = Math.ceil(file.size / chunkSize);
+            const cryptoObj = window.crypto || window.msCrypto;
+            const subtle = cryptoObj.subtle;
+
+            // For small files, direct hash
+            if (file.size <= chunkSize * 2) {
+                const buffer = await file.arrayBuffer();
+                const hashBuffer = await subtle.digest('SHA-256', buffer);
+                onProgress(100);
+                return bufferToHex(hashBuffer);
+            }
+
+            // For large files, progressive hashing
+            // Note: This is simplified; for production use a streaming approach
+            const buffer = await file.arrayBuffer();
+            const hashBuffer = await subtle.digest('SHA-256', buffer);
+            onProgress(100);
+            return bufferToHex(hashBuffer);
+        }
+
+        function bufferToHex(buffer) {
+            const array = Array.from(new Uint8Array(buffer));
+            return array.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function checkDuplicate(hash) {
+            try {
+                const response = await fetch(`/api/files/check-duplicate?hash=${hash}`);
+                const data = await response.json();
+
+                if (data.isDuplicate) {
+                    isDuplicate = true;
+                    duplicateAlert.style.display = 'flex';
+                    duplicateMsg.textContent = `هذا الملف موجود بالفعل في النظام بنفس المحتوى (Hash: ${hash.substring(0, 16)}...).`;
+                    uploadBtn.disabled = true;
+                    step2.classList.remove('completed');
+                    step2.classList.add('error');
+                } else {
+                    isDuplicate = false;
+                    duplicateAlert.style.display = 'none';
+                    uploadBtn.disabled = false;
+                    step3.classList.add('active');
+                }
+            } catch (err) {
+                console.error('Error checking duplicate:', err);
+                // Allow upload if check fails (server will validate again)
+                uploadBtn.disabled = false;
+            }
+        }
+
+        function resetUpload() {
+            selectedFile = null;
+            isDuplicate = false;
+            fileInput.value = '';
+            
+            zone.style.display = 'block';
+            filePreview.style.display = 'none';
+            duplicateAlert.style.display = 'none';
+            uploadBtn.disabled = true;
+            
+            previewHash.textContent = 'جاري الحساب...';
+            hashProgressBar.style.width = '0%';
+            
+            step1.classList.remove('completed');
+            step2.classList.remove('active', 'completed', 'error');
+            step3.classList.remove('active');
+        }
+
+        // Form submission with progress
+        uploadForm.addEventListener('submit', function (e) {
+            if (!selectedFile) {
+                e.preventDefault();
+                showToast('اختر ملف أولاً', 'warning');
+                return;
+            }
+
+            if (isDuplicate) {
+                e.preventDefault();
+                showToast('لا يمكن رفع ملف مكرر', 'error');
+                return;
+            }
+
+            // Show progress
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الرفع...';
+            uploadProgress.style.display = 'block';
+            step3.classList.add('active');
+
+            // Simulate progress (actual progress requires XMLHttpRequest)
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+                uploadProgressBar.style.width = progress + '%';
+                uploadPercent.textContent = Math.round(progress) + '%';
+            }, 300);
+
+            // Clear interval on page unload (form will submit normally)
+            window.addEventListener('beforeunload', () => clearInterval(interval));
+        });
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            let i = 0;
+            let size = bytes;
+            while (size >= 1024 && i < sizes.length - 1) {
+                size /= 1024;
+                i++;
+            }
+            return size.toFixed(2) + ' ' + sizes[i];
+        }
+
+        function getFileIcon(mimeType) {
+            if (mimeType.startsWith('image/')) return 'fa-file-image';
+            if (mimeType === 'application/pdf') return 'fa-file-pdf';
+            if (mimeType.includes('word') || mimeType.includes('document')) return 'fa-file-word';
+            if (mimeType.includes('excel') || mimeType.includes('sheet')) return 'fa-file-excel';
+            return 'fa-file';
+        }
+    </script>
+}

@@ -1,0 +1,93 @@
+﻿@model FolderDetailsVM
+
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+@section Breadcrumb {
+    <a asp-action="Index"><i class="fas fa-folder-tree"></i> المجلدات</a>
+    <span class="mx-2">/</span>
+    <span>@Model.Name</span>
+}
+
+<div class="card">
+    <div class="card-header">
+        <div style="display: flex; gap: 8px;">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary btn-sm"><i class="fas fa-pen"></i>
+                تعديل</a>
+                <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i>
+                    حذف</a>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <small class="text-muted m-2">
+                            @Model.CreatedAt.ToString("yyyy-MM-dd")
+                            <i class="fas fa-calendar"></i>
+                        </small>
+                        <span>.</span>
+                        <h2 class="card-title m-2">
+                            @Model.Name <i class="fas fa-folder"></i>
+                        </h2>
+                    </div>
+
+                    <p style="color: var(--gray-500); font-size: 0.8rem; margin-top: 4px;">
+                        @if (!string.IsNullOrEmpty(Model.Description))
+                        {
+                            <span>@Model.Description</span>
+                        }
+                    </p>
+                </div>
+        
+            </div>
+
+            @if (!Model.Files.Any())
+            {
+                <div class="empty-state">
+                    <i class="fas fa-file-circle-xmark"></i>
+                    <h3>المجلد فارغ</h3>
+                    <p>لا يوجد ملفات في هذا المجلد</p>
+                </div>
+            }
+            else
+            {
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>الإجراءات</th>
+                            <th>تاريخ الرفع</th>
+                            <th>النوع</th>
+                            <th>الحجم</th>
+                            <th>الملف</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var file in Model.Files)
+                        {
+                            <tr>
+                                <td>
+                                    <a href="@file.FilePath" target="_blank" class="btn btn-sm btn-primary"><i
+                                        class="fas fa-eye"></i></a>
+                                    </td>
+                                    <td>@file.UploadedAt.ToString("yyyy-MM-dd")</td>
+                                    <td>@file.ContentType</td>
+                                    <td>@Functions.FormatSize(file.FileSize??0)</td>
+                                    
+                                    <td>
+                                        <div class="file-row">
+                                            <div class="file-meta">
+                                                <span class="file-name">@file.OriginalFileName</span>
+                                                <code class="file-hash">@file.FileHash[..16]...</code>
+                                            </div>
+                                            <div class="file-icon @Functions.GetFileIconClass(file.ContentType)">
+                                                <i class="fas @Functions.GetFileIcon(file.ContentType)"></i>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+

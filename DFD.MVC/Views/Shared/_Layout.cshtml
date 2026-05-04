@@ -1,0 +1,81 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/DFD.MVC.styles.css" asp-append-version="true" />
+    @* icons *@
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-shield-halved"></i>
+                    <span>FileGuard</span>
+                </div>
+                <p class="logo-subtitle">نظام كشف الملفات المكررة</p>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a asp-controller="Dashboard" asp-action="Index"
+                       class="nav-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>لوحة التحكم</span>
+                </a>
+                <a asp-controller="Folders" asp-action="Index"
+                       class="nav-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Folders" ? "active" : "")">
+                    <i class="fas fa-folder-tree"></i>
+                    <span>المجلدات</span>
+                </a>
+                <a asp-controller="Files" asp-action="Index"
+                       class="nav-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Files" ? "active" : "")">
+                    <i class="fas fa-file-shield"></i>
+                    <span>الملفات</span>
+                </a>
+                <a asp-controller="UploadAttempts" asp-action="Index"
+                       class="nav-item @(ViewContext.RouteData.Values["Controller"]?.ToString() == "UploadAttempts" ? "active" : "")">
+                    <i class="fas fa-triangle-exclamation"></i>
+                    <span>محاولات الرفع</span>
+                </a>
+            </nav>
+
+           
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="breadcrumb">
+                    @RenderSection("Breadcrumb", required: false)
+                </div>
+                <div class="top-actions">
+                    <a asp-controller="Files" asp-action="Upload" class="btn-upload">
+                        <i class="fas fa-cloud-arrow-up"></i>
+                        رفع ملف جديد
+                    </a>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

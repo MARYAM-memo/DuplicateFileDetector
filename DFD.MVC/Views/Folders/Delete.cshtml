@@ -1,0 +1,162 @@
+﻿@model FolderDetailsVM
+
+@{
+    ViewData["Title"] = "حذف مجلد";
+}
+
+@section Breadcrumb {
+    <a asp-action="Index"><i class="fas fa-folder-tree"></i> المجلدات</a>
+    <span class="mx-2">/</span>
+    <a asp-action="Details" asp-route-id="@Model.Id">@Model.Name</a>
+    <span class="mx-2">/</span>
+    <span style="color: var(--danger);">حذف</span>
+}
+
+<div class="card" style="max-width: 700px; margin: 0 auto;">
+    <div class="card-header" style="border-bottom: 2px solid var(--danger);">
+        <h2 class="card-title" style="color: var(--danger);">
+            <i class="fas fa-triangle-exclamation"></i> تأكيد الحذف
+        </h2>
+    </div>
+
+    <div style="padding: 24px;">
+        <!-- Warning Banner -->
+        <div class="alert alert-danger" style="margin-bottom: 24px;">
+            <i class="fas fa-circle-exclamation" style="font-size: 1.3rem;"></i>
+            <div>
+                <strong>تحذير!</strong>
+                <p style="margin: 4px 0 0 0;">
+                    أنت على وشك حذف المجلد <strong>"@Model.Name"</strong>.
+                    @if (Model.Files.Any())
+                    {
+                        <span>
+                            سيؤدي ذلك لحذف <strong>@Model.Files.Count</strong>
+                            @(Model.Files.Count == 1 ? "ملف" : "ملفات") داخل المجلد نهائياً.
+                        </span>
+                    }
+                    هذا الإجراء لا يمكن التراجع عنه!
+                </p>
+            </div>
+        </div>
+
+        <!-- Folder Info -->
+        <div style="background: var(--gray-100); border-radius: var(--radius); padding: 20px; margin-bottom: 24px;">
+            <h4 style="margin-bottom: 16px; color: var(--gray-700);">
+                <i class="fas fa-folder"></i> بيانات المجلد
+            </h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                    <span style="color: var(--gray-500); font-size: 0.85rem;">اسم المجلد</span>
+                    <p style="font-weight: 600; margin-top: 4px;">@Model.Name</p>
+                </div>
+                <div>
+                    <span style="color: var(--gray-500); font-size: 0.85rem;">تاريخ الإنشاء</span>
+                    <p style="font-weight: 600; margin-top: 4px;">@Model.CreatedAt.ToString("yyyy-MM-dd")</p>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <div style="grid-column: 1 / -1;">
+                        <span style="color: var(--gray-500); font-size: 0.85rem;">الوصف</span>
+                        <p style="margin-top: 4px;">@Model.Description</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Files List (if any) -->
+        @if (Model.Files.Any())
+        {
+            <div style="margin-bottom: 24px;">
+                <h4 style="margin-bottom: 12px; color: var(--gray-700);">
+                    <i class="fas fa-files"></i> الملفات التي سيتم حذفها (@Model.Files.Count)
+                </h4>
+                <div
+                    style="max-height: 250px; overflow-y: auto; border: 1px solid var(--gray-200); border-radius: var(--radius);">
+                    <table class="data-table" style="margin: 0;">
+                        <thead style="position: sticky; top: 0; background: var(--gray-100); z-index: 1;">
+                            <tr>
+                                <th>الملف</th>
+                                <th>الحجم</th>
+                                <th>تاريخ الرفع</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var file in Model.Files)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="file-row">
+                                            <div class="file-icon @file.FileIconClass"
+                                                 style="width: 32px; height: 32px; font-size: 0.9rem;">
+                                                <i class="fas @file.FileIcon"></i>
+                                            </div>
+                                            <span class="file-name" style="font-size: 0.9rem;">@file.OriginalFileName</span>
+                                        </div>
+                                    </td>
+                                    <td style="font-size: 0.85rem;">@file.FormattedSize</td>
+                                    <td style="font-size: 0.85rem;">@file.UploadedAt.ToString("yyyy-MM-dd")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+        <!-- Confirmation Form -->
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" id="deleteForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <!-- Type Confirmation -->
+            <div
+                style="margin-bottom: 24px; padding: 16px; background: rgba(239, 68, 68, 0.05); border-radius: var(--radius); border: 1px dashed var(--danger);">
+                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                    <input type="checkbox" id="confirmCheckbox"
+                           style="width: 20px; height: 20px; accent-color: var(--danger);" />
+                    <span style="font-weight: 500;">
+                        أتفهم أن هذا الإجراء سيحذف المجلد
+                        @if (Model.Files.Any())
+                        {
+                            <span>و <strong>@Model.Files.Count</strong> @(Model.Files.Count == 1 ? "ملف" : "ملفات")
+                                بداخله</span>
+                            }
+                            نهائياً ولا يمكن التراجع عنه.
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Actions -->
+                <div class="modal-actions" style="border-top: 1px solid var(--gray-200); padding-top: 20px;">
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                        <i class="fas fa-arrow-right"></i> إلغاء وعودة
+                    </a>
+                    <button type="submit" class="btn btn-danger" id="deleteBtn" disabled>
+                        <i class="fas fa-trash-can"></i> نعم، احذف المجلد
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script>
+            const checkbox = document.getElementById('confirmCheckbox');
+            const deleteBtn = document.getElementById('deleteBtn');
+
+            checkbox.addEventListener('change', function () {
+                deleteBtn.disabled = !this.checked;
+            });
+
+            document.getElementById('deleteForm').addEventListener('submit', function (e) {
+                if (!checkbox.checked) {
+                    e.preventDefault();
+                    showToast('يجب تأكيد الحذف أولاً', 'warning');
+                    return;
+                }
+
+                deleteBtn.disabled = true;
+                deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحذف...';
+            });
+        </script>
+    }

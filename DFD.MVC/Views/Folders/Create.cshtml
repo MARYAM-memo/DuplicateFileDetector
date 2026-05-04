@@ -1,0 +1,46 @@
+﻿
+@model FolderCreateVM
+
+@{
+    ViewData["Title"] = "إنشاء مجلد";
+}
+
+@section Breadcrumb {
+    <a asp-action="Index"><i class="fas fa-folder-tree"></i> المجلدات</a>
+    <span class="mx-2">/</span>
+    <span>إنشاء مجلد</span>
+}
+
+<div class="card" style="max-width: 600px;">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fas fa-folder-plus"></i> إنشاء مجلد جديد</h2>
+    </div>
+
+    <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+        <div class="form-group">
+            <label asp-for="Name"></label>
+            <input asp-for="Name" class="form-select" style="text-align: right;" placeholder="مثال: مستندات 2024" />
+            <span asp-validation-for="Name" class="text-danger"
+                  style="color: var(--danger); font-size: 0.85rem;"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Description"></label>
+            <textarea asp-for="Description" class="form-select" rows="3" style="text-align: right; resize: vertical;"
+                      placeholder="وصف المجلد..."></textarea>
+            <span asp-validation-for="Description" class="text-danger"
+                  style="color: var(--danger); font-size: 0.85rem;"></span>
+        </div>
+
+        <div class="modal-actions">
+            <a asp-action="Index" class="btn btn-secondary">إلغاء</a>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> إنشاء</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

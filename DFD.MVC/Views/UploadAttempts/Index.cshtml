@@ -1,0 +1,109 @@
+﻿@model IEnumerable<UploadAttemptsListVM>
+
+@{
+    ViewData["Title"] = "محاولات مرفوضة";
+}
+
+@section Breadcrumb {
+    <span><i class="fas fa-triangle-exclamation"></i> محاولات مرفوضة</span>
+}
+
+<div class="stats-grid">
+    <div class="stat-card danger">
+        <div class="stat-icon"><i class="fas fa-ban"></i></div>
+        <div class="stat-info">
+            <h3>@Model.Count(a => a.IsRejected)</h3>
+            <p>محاولات مرفوضة</p>
+        </div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-info">
+            <h3>@Model.Count()</h3>
+            <p>إجمالي المحاولات</p>
+        </div>
+    </div>
+    <div class="stat-card primary">
+        <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+        <div class="stat-info">
+            <h3>@Model.Count(a => a.AttemptedAt == DateOnly.FromDateTime(DateTime.Today))</h3>
+            <p>اليوم</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title"><i class="fas fa-shield-halved"></i> سجل محاولات الرفع</h2>
+        <form asp-action="ClearAll" method="post" onsubmit="return confirm('هل أنت متأكد من مسح السجل بالكامل؟');">
+            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash-can"></i> مسح السجل</button>
+        </form>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <i class="fas fa-shield-halved"></i>
+            <h3>لا يوجد محاولات</h3>
+            <p>لم يتم تسجيل أي محاولات رفع بعد</p>
+        </div>
+    }
+    else
+    {
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>اسم الملف</th>
+                    <th>الـ Hash</th>
+                    <th>الحجم</th>
+                    <th>تاريخ المحاولة</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var attempt in Model.OrderByDescending(a => a.Id))
+                {
+                    <tr>
+                        <td style="color: var(--gray-400); font-size: 0.85rem;">#@attempt.Id</td>
+                        <td>
+                            <div class="file-row">
+                                <i class="fas fa-file" style="color: var(--gray-400);"></i>
+                                <span class="file-name">@attempt.FileName</span>
+                            </div>
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(attempt.FileHash))
+                            {
+                                <code
+                                    style="font-size: 0.75rem; background: var(--gray-100); padding: 4px 8px; border-radius: 4px; direction: ltr; display: inline-block;">
+                                    @attempt.FileHash[..20]...
+                                </code>
+                            }
+                            else
+                            {
+                                <span style="color: var(--gray-400);">-</span>
+                            }
+                        </td>
+                        <td>@Functions.FormatSize(attempt.FileSize ?? 0)</td>
+                        <td>@attempt.AttemptedAt.ToString("yyyy-MM-dd")</td>
+                        <td>
+                            @if (attempt.IsRejected)
+                            {
+                                <span class="badge badge-danger">
+                                    <i class="fas fa-ban"></i> مرفوض - ملف مكرر
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-success">
+                                    <i class="fas fa-check"></i> ناجح
+                                </span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
