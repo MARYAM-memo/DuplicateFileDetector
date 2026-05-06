@@ -135,6 +135,19 @@ dotnet run
 | **File Management**                 | <img width="1425" height="685" alt="Files" src="https://github.com/user-attachments/assets/a54534fd-3be1-4069-bd20-0dcbdc06eb89" /> |
 | **Upload Attempts Log**             | <img width="1425" height="713" alt="UploadAttempts" src="https://github.com/user-attachments/assets/e9e699ad-3f38-459f-8945-530ae0d96a7b" /> |
 
+---
+
+## 💼 Use Case
+
+This system is ideal for:
+- Companies handling large file uploads
+- Document management systems
+- Cloud storage solutions
+
+## 📩 Need a similar system?
+
+I can build a custom version tailored to your business needs.
+Feel free to reach out via LinkedIn or email.
 
 
 ### 👩‍💻 Developer
