@@ -17,6 +17,23 @@ https://github.com/user-attachments/assets/6d730625-f34b-415c-929b-f7a32a0caff0
 
 
 ---
+## 💡 Business Problem
+
+Many businesses suffer from duplicated file uploads, which leads to:
+- Wasted storage
+- Increased costs
+- Data inconsistency
+
+## 🚀 Solution
+
+FileGuard detects duplicate files using SHA-256 hashing, ensuring that even if a file is renamed, it won't be uploaded twice.
+
+## 🎯 Value
+
+- Saves storage costs
+- Improves data integrity
+- Prevents human errors during uploads
+---
 
 ## ✨ Features
 
